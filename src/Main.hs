@@ -21,8 +21,17 @@ makeWindowCloseCallback closedRef = do
 
 -- | Creating a callback for resizing the window.
 makeWindowSizeCallback :: WindowSizeCallback
-makeWindowSizeCallback _ = do
-  return ()
+makeWindowSizeCallback s@(Size w h) = do
+  matrixMode $= Projection
+  loadIdentity
+
+  ortho (-fromIntegral w / 640 * 50) ( fromIntegral w / 640 * 50)
+        ( fromIntegral h / 640 * 50) (-fromIntegral h / 640 * 50)
+        (             -1           ) (              1           )
+
+  matrixMode $= Modelview 0
+
+  viewport $= (Position 0 0, s)
 
 -- | The entry point of the program.
 main :: IO ()

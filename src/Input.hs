@@ -17,8 +17,8 @@ renderSize =
   effectful $ liftA convert $ get windowSize
   where convert :: Size -> V2 Float
         convert (Size w h) =
-          V2 (fromIntegral w / 640 * 100)
-             (fromIntegral h / 640 * 100)
+          V2 (fromIntegral w / 640 * 50)
+             (fromIntegral h / 640 * 50)
 
 -- | Checking if a given key is held down.
 isKeyDown :: Enum k => k -> SignalGen p (Signal Bool)

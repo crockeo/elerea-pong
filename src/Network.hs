@@ -9,7 +9,9 @@ import Data.IORef
 
 -------------------
 -- Local Imports --
+import Rendering
 import World
+import Game
 
 ----------
 -- Code --
@@ -35,4 +37,4 @@ runNetwork' closedRef stepFn = do
 -- | The front end for running the network.
 runNetwork :: IORef Bool -> IO ()
 runNetwork closedRef =
-  start world >>= runNetwork' closedRef
+  start worldWire >>= runNetwork' closedRef
