@@ -8,6 +8,7 @@ import Linear.V2
 -------------------
 -- Local Imports --
 import Config
+import Input
 import World
 
 ----------
@@ -29,6 +30,14 @@ renderPaddle (Paddle (V2 x y) (V2 w h)) = do
                        , V2 (x    ) (y + h)
                        ]
 
+-- | Rendering a line down the center of the screen.
+renderCenter :: IO ()
+renderCenter = do
+  (V2 _ h) <- renderSize'
+  renderPrimitive Lines $
+    mapM_ linearVertex [ V2 0 (-h)
+                       , V2 0 ( h)
+                       ]
 
 -- | Rendering the ball.
 renderBall :: Ball -> IO ()
@@ -45,6 +54,7 @@ renderBall (Ball pos r) =
 -- | Rendering a given world.
 renderWorld :: World -> IO ()
 renderWorld (World lp _ rp _ b) = do
+  renderCenter
   renderPaddle lp
   renderPaddle rp
   renderBall b
