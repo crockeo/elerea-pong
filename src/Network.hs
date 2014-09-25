@@ -4,6 +4,7 @@ module Network where
 -- Global Imports --
 import Graphics.Rendering.OpenGL
 import Graphics.UI.GLFW as GLFW
+import Control.Concurrent
 import FRP.Elerea.Param
 import Data.IORef
 
@@ -32,6 +33,7 @@ runNetwork' closedRef stepFn = do
       renderWorld w
       swapBuffers
 
+      threadDelay 10000
       runNetwork' closedRef stepFn
 
 -- | The front end for running the network.

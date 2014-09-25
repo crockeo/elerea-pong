@@ -8,6 +8,8 @@ import Control.Monad.Fix
 import FRP.Elerea.Param
 import Linear.V2
 
+import Debug.Trace
+
 -------------------
 -- Local Imports --
 import Config
@@ -53,30 +55,53 @@ paddleAcceleration uk dk v = do
           | otherwise = 0
 
 -- | Generating the vertical velocity of a paddle.
-paddleVelocity :: Enum k => k -> k -> Signal Float -> SignalGen Float (Signal Float)
-paddleVelocity uk dk vel = do
+paddleVelocity :: Enum k => k -> k -> Signal Bool -> Signal Float -> SignalGen Float (Signal Float)
+paddleVelocity uk dk sb vel = do
   accel <- paddleAcceleration uk dk vel
-  vel'  <- integral 0 accel
+  vel'  <- transfer2 0 paddleVelocity' accel sb
+  delay 0 vel'
+  where paddleVelocity' :: Float -> Float -> Bool -> Float -> Float
+        paddleVelocity' dt accel b vel' =
+          let vel'' = (vel' + accel * dt) in
+            if vel'' > -minSpeed && vel'' < minSpeed
+              then 0
+              else if b
+                then -vel''
+                else  vel''
 
-  delay 0 $ stop <$> vel'
-  where stop :: Float -> Float
-        stop f =
-          if f > -minSpeed && f < minSpeed
-            then 0
-            else f
+-- | Checking if a paddle should bounce.
+bounce :: Signal Float -> SignalGen Float (Signal Bool)
+bounce sy = do
+  h <- signalMap (\(V2 _ h) -> h) renderSize
+  return $ bounce' <$> sy <*> h
+  where bounce' :: Float -> Float -> Bool
+        bounce' y h = y < -h || y + paddleHeight > h
+
+-- | Getting the position of the paddle.
+paddlePosition :: Enum k => k -> k -> Signal Float -> SignalGen Float (Signal Float)
+paddlePosition uk dk p = do
+  h   <- signalMap (\(V2 _ h) -> h) renderSize
+  b   <- bounce p
+  vel <- mfix $ paddleVelocity uk dk b
+  p   <- transfer3 (-paddleHeight / 2) paddlePosition' vel b h
+
+  delay (-paddleHeight / 2) p
+  where paddlePosition' :: Float -> Float -> Bool -> Float -> Float -> Float
+        paddlePosition' dt vel b h p' =
+          if b
+            then if p' > 0
+              then  h - paddleHeight
+              else -h
+            else p' + vel * dt
 
 -- | The wire to represent the paddle.
 paddleWire :: Enum k => k -> k -> Either () () -> SignalGen Float (Signal Paddle)
 paddleWire uk dk side = do
-  veloc <- mfix (paddleVelocity uk dk)
-  w     <- signalMap (\(V2 w _) -> w) renderSize
-  y     <- transfer (-paddleHeight / 2) paddlePosition veloc
+  w <- signalMap (\(V2 w _) -> w) renderSize
+  y <- mfix $ paddlePosition uk dk
 
   return $ makePaddle <$> y <*> w
-  where paddlePosition :: Float -> Float -> Float -> Float
-        paddlePosition dt accel pos = pos + accel * dt
-
-        makePaddle :: Float -> Float -> Paddle
+  where makePaddle :: Float -> Float -> Paddle
         makePaddle y w =
           case side of
             Left  () -> Paddle (V2 (-w               + paddleWidth / 2) y) paddleSize
@@ -85,7 +110,7 @@ paddleWire uk dk side = do
 
 -- | The wire to represent the ball.
 ballWire :: SignalGen Float (Signal Ball)
-ballWire = pure $ pure $ Ball (V2 0 0) 5
+ballWire = pure $ pure $ Ball (V2 0 0) 2
 
 -- | The wire to represent the world.
 worldWire :: SignalGen Float (Signal World)

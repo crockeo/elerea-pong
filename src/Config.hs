@@ -26,3 +26,7 @@ paddleHeight = 10
 -- | The paddle size.
 paddleSize :: V2 Float
 paddleSize = V2 paddleWidth paddleHeight
+
+-- | The render detail of the ball.
+renderDetail :: Float
+renderDetail = 10
