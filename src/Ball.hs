@@ -10,58 +10,38 @@ import Linear.V2
 -------------------
 -- Local Imports --
 import Config
-import Input
 import World
 
 ----------
 -- Code --
 
 -- | Getting the speed of the ball.
-ballSpeed :: Signal (Bool, Bool) -> Signal (V2 Float) -> SignalGen Float (Signal (V2 Float))
+ballSpeed :: Signal (V2 Bool) -> Signal (V2 Float) -> SignalGen Float (Signal (V2 Float))
 ballSpeed b dir = do
   delay ballSpeedRaw $ ballSpeed' <$> b <*> dir
-  where ballSpeed' :: (Bool, Bool) -> V2 Float -> V2 Float
-        ballSpeed' (bx, by) (V2 dx dy)
-          | bx && by  = V2 (-dx) (-dy)
-          | bx        = V2 (-dx) ( dy)
-          | by        = V2 ( dx) (-dy)
+  where ballSpeed' :: V2 Bool -> V2 Float -> V2 Float
+        ballSpeed' (V2 bx by) (V2 dx dy)
+          | bx && by  = V2 (-dx * ballScale) (-dy * ballScale)
+          | bx        = V2 (-dx * ballScale) ( dy)
+          | by        = V2 ( dx) (-dy * ballScale)
           | otherwise = V2 ( dx) ( dy)
 
--- | Checking if a ball at a given position should bounce.
-shouldBounce :: Signal (V2 Float) -> SignalGen Float (Signal (Bool, Bool))
-shouldBounce p = do
-  size <- renderSize
-  return $ shouldBounce' <$> size <*> p
-  where shouldBounce' :: V2 Float -> V2 Float -> (Bool, Bool)
-        shouldBounce' (V2 w h) (V2 x y) =
-          ( x - ballRadius < (-w) || x + ballRadius > ( w)
-          , y - ballRadius < (-h) || y + ballRadius > ( h)
-          )
-
 -- | Getting the position of the ball.
-ballPosition :: Signal (V2 Float) -> SignalGen Float (Signal (V2 Float))
-ballPosition p = do
-  size <- renderSize
-  b    <- shouldBounce p
-  s    <- mfix $ ballSpeed b
-  p'   <- transfer3 (V2 0 0) ballPosition' size s b
+ballPosition :: Signal (V2 Bool, V2 Float) -> SignalGen Float (Signal (V2 Float))
+ballPosition sBounds = do
+  sSpeed <- mfix $ (ballSpeed $ fmap fst sBounds)
+  sPos   <- transfer2 (V2 0 0) ballPosition' sSpeed sBounds
 
-  delay (V2 0 0) p'
-  where ballPosition' :: Float -> V2 Float -> V2 Float -> (Bool, Bool) -> V2 Float -> V2 Float
-        ballPosition' dt (V2 w h) speed (bx, by) p' =
-          let p''@(V2 x y) = p' + speed * pure dt in
-            if by
-              then if y < 0
-                then V2 x (-h + ballRadius)
-                else V2 x ( h - ballRadius)
-              else if bx
-                then if x < 0
-                  then V2 (-w + ballRadius) y
-                  else V2 ( w - ballRadius) y
-                else p''
+  delay (V2 0 0) sPos
+  where ballPosition' :: Float -> V2 Float -> (V2 Bool, V2 Float) -> V2 Float -> V2 Float
+        ballPosition' dt (V2 dx dy) (V2 bx by, V2 nx ny) (V2 x y)
+          | bx && by  = V2 nx            ny
+          | bx        = V2 nx            (y + dt * dy)
+          | by        = V2 (x + dt * dx) ny
+          | otherwise = V2 (x + dt * dx) (y + dt * dy)
 
 -- | The wire to represent the ball.
-ballWire :: SignalGen Float (Signal Ball)
-ballWire = do
-  pos <- mfix ballPosition
+ballWire :: Signal (V2 Bool, V2 Float) -> SignalGen Float (Signal Ball)
+ballWire sBounds = do
+  pos <- ballPosition sBounds
   return $ Ball <$> pos <*> pure ballRadius

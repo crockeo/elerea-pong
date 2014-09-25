@@ -33,7 +33,6 @@ runNetwork' closedRef stepFn = do
       renderWorld w
       swapBuffers
 
-      threadDelay 10000
       runNetwork' closedRef stepFn
 
 -- | The front end for running the network.

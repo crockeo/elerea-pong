@@ -35,6 +35,10 @@ ballSpeedRaw = V2 20 20
 ballRadius :: Float
 ballRadius = 2
 
+-- | Scaling the ball by this value whenever it bounces.
+ballScale :: Float
+ballScale = 1.05
+
 -- | The render detail of the ball.
 renderDetail :: Float
 renderDetail = ballRadius * 5
