@@ -38,5 +38,6 @@ runNetwork' closedRef stepFn = do
 
 -- | The front end for running the network.
 runNetwork :: IORef Bool -> IO ()
-runNetwork closedRef =
+runNetwork closedRef = do
+  GLFW.time $= 0
   start worldWire >>= runNetwork' closedRef

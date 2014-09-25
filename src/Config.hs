@@ -27,6 +27,14 @@ paddleHeight = 10
 paddleSize :: V2 Float
 paddleSize = V2 paddleWidth paddleHeight
 
+-- | The speed of the ball.
+ballSpeedRaw :: V2 Float
+ballSpeedRaw = V2 20 20
+
+-- | The radius of the ball.
+ballRadius :: Float
+ballRadius = 2
+
 -- | The render detail of the ball.
 renderDetail :: Float
-renderDetail = 10
+renderDetail = ballRadius * 5
