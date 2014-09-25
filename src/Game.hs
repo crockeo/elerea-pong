@@ -13,6 +13,7 @@ import Debug.Trace
 -- Local Imports --
 import Config
 import Input
+import Utils
 import World
 
 ----------
@@ -22,17 +23,6 @@ import World
 initialPaddle :: Either () () -> Paddle
 initialPaddle (Left  ()) = Paddle (V2 (-50               + paddleWidth / 2) 0) paddleSize
 initialPaddle (Right ()) = Paddle (V2 ( 50 - paddleWidth - paddleWidth / 2) 0) paddleSize
-
--- | Taking the integral of a value with respect to time.
-integral :: Fractional a => a -> (Signal a -> SignalGen a (Signal a))
-integral i =
-  transfer i integral'
-  where integral' :: Fractional a => a -> a -> a -> a
-        integral' dt s p = p + s * dt
-
--- | Mapping a function over a @'SignalGen'@ of a @'Signal'@.
-signalMap :: (a -> b) -> SignalGen p (Signal a) -> SignalGen p (Signal b)
-signalMap fn s = fmap (fmap fn) s
 
 -- | Generating the vertical acceleration given the input keys.
 paddleAcceleration :: Enum k => k -> k -> Signal Float -> SignalGen Float (Signal Float)
