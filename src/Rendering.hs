@@ -20,15 +20,21 @@ linearVertex (V2 x y) =
   vertex $ Vertex2 (realToFrac x :: GLfloat)
                    (realToFrac y :: GLfloat)
 
+-- | Generating a quad to be rendered given the position and size of a
+--   rectangle.
+generateQuad :: V2 Float -> V2 Float -> [V2 Float]
+generateQuad (V2 x y) (V2 w h) =
+  [ V2 (x    ) (y    )
+  , V2 (x + w) (y    )
+  , V2 (x + w) (y + h)
+  , V2 (x    ) (y + h)
+  ]
+
 -- | Rendering a paddle.
 renderPaddle :: Paddle -> IO ()
-renderPaddle (Paddle (V2 x y) (V2 w h)) = do
+renderPaddle (Paddle p s) = do
   renderPrimitive Quads $
-    mapM_ linearVertex [ V2 (x    ) (y    )
-                       , V2 (x + w) (y    )
-                       , V2 (x + w) (y + h)
-                       , V2 (x    ) (y + h)
-                       ]
+    mapM_ linearVertex $ generateQuad p s
 
 -- | Rendering a line down the center of the screen.
 renderCenter :: IO ()
@@ -51,10 +57,26 @@ renderBall (Ball pos r) =
           where generateVertex :: V2 Float
                 generateVertex = pos + (V2 r r) * V2 (sin radians) (cos radians)
 
+-- | Rendering the score.
+renderScore :: Int -> Either () () -> IO ()
+renderScore s side = do
+  (V2 w h) <- renderSize'
+  renderPrimitive Quads $
+    mapM_ linearVertex $ generateQuad (V2 (makeX w side) (h - h / 2)) (V2 (sigSide side * fromIntegral s) 5)
+  where makeX :: Float -> Either () () -> Float
+        makeX w (Left  ()) = (-w + w / 4)
+        makeX w (Right ()) = ( w - w / 4)
+
+        sigSide :: Num a => Either () () -> a
+        sigSide (Left  ()) =  1
+        sigSide (Right ()) = -1
+
 -- | Rendering a given world.
 renderWorld :: World -> IO ()
-renderWorld (World lp _ rp _ b) = do
+renderWorld (World lp ls rp rs b) = do
   renderCenter
   renderPaddle lp
   renderPaddle rp
   renderBall b
+  renderScore ls $ Left  ()
+  renderScore rs $ Right ()

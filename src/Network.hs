@@ -4,7 +4,6 @@ module Network where
 -- Global Imports --
 import Graphics.Rendering.OpenGL
 import Graphics.UI.GLFW as GLFW
-import Control.Concurrent
 import FRP.Elerea.Param
 import Data.IORef
 
