@@ -42,3 +42,7 @@ ballScale = 1.05
 -- | The render detail of the ball.
 renderDetail :: Float
 renderDetail = ballRadius * 5
+
+-- | The height of the score.
+scoreHeight :: Float
+scoreHeight = 3

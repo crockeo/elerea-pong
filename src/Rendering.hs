@@ -62,7 +62,7 @@ renderScore :: Int -> Either () () -> IO ()
 renderScore s side = do
   (V2 w h) <- renderSize'
   renderPrimitive Quads $
-    mapM_ linearVertex $ generateQuad (V2 (makeX w side) (h - h / 2)) (V2 (sigSide side * fromIntegral s) 5)
+    mapM_ linearVertex $ generateQuad (V2 (makeX w side) (-h + scoreHeight / 2)) (V2 (sigSide side * (fromIntegral s / 2)) scoreHeight)
   where makeX :: Float -> Either () () -> Float
         makeX w (Left  ()) = (-w + w / 4)
         makeX w (Right ()) = ( w - w / 4)
@@ -74,9 +74,14 @@ renderScore s side = do
 -- | Rendering a given world.
 renderWorld :: World -> IO ()
 renderWorld (World lp ls rp rs b) = do
+  color $ Color3 (0.3 :: GLfloat) (0.3 :: GLfloat) (0.3 :: GLfloat)
   renderCenter
+
+  color $ Color3 (1.0 :: GLfloat) (1.0 :: GLfloat) (1.0 :: GLfloat)
   renderPaddle lp
   renderPaddle rp
   renderBall b
+
+  color $ Color3 (1.0 :: GLfloat) (1.0 :: GLfloat) (0.8 :: GLfloat)
   renderScore ls $ Left  ()
   renderScore rs $ Right ()
